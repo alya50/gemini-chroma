@@ -158,3 +158,4 @@ proto-plus==1.26.1
 pyparsing==3.2.1
 uritemplate==4.1.1
 protobuf~=5.29.4
+tqdm~=4.67.1
