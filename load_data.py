@@ -1,29 +1,31 @@
 import os
 import argparse
 
+from chromadb import Settings
 from tqdm import tqdm
 
 import chromadb
 from chromadb.utils import embedding_functions
-import google.generativeai as genai
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+from Env import Env
+
 
 def main(
-    documents_directory: str = "documents",
-    collection_name: str = "documents_collection",
-    persist_directory: str = ".",
+        documents_directory: str = "documents",
+        collection_name: str = "documents_collection",
+        persist_directory: str = ".",
+
 ) -> None:
     # Read all files in the data directory
     documents = []
     metadatas = []
+
     files = os.listdir(documents_directory)
+
     for filename in files:
         with open(f"{documents_directory}/{filename}", "r") as file:
             for line_number, line in enumerate(
-                tqdm((file.readlines()), desc=f"Reading {filename}"), 1
+                    tqdm((file.readlines()), desc=f"Reading {filename}"), 1
             ):
                 # Strip whitespace and append the line to the documents list
                 line = line.strip()
@@ -35,15 +37,17 @@ def main(
 
     # Instantiate a persistent chroma client in the persist_directory.
     # Learn more at docs.trychroma.com
-    client = chromadb.PersistentClient(path=persist_directory)
+    client = chromadb.PersistentClient(
+        path=persist_directory,
+        settings=Settings(
+            allow_reset=True
+        )
+    )
 
-    google_api_key = None
-    if "GEMINI_API_KEY" not in os.environ:
-        gapikey = input("Please enter your Google API Key: ")
-        genai.configure(api_key=gapikey)
-        google_api_key = gapikey
-    else:
-        google_api_key = os.environ["GEMINI_API_KEY"]
+    # Reset the client to clear previous data
+    client.reset()
+
+    google_api_key = Env("GEMINI_API_KEY")
 
     # create embedding function
     embedding_function = embedding_functions.GoogleGenerativeAiEmbeddingFunction(
@@ -63,12 +67,12 @@ def main(
 
     # Load the documents in batches of 100
     for i in tqdm(
-        range(0, len(documents), 100), desc="Adding documents", unit_scale=100
+            range(0, len(documents), 100), desc="Adding documents", unit_scale=100,
     ):
         collection.add(
-            ids=ids[i : i + 100],
-            documents=documents[i : i + 100],
-            metadatas=metadatas[i : i + 100],  # type: ignore
+            ids=ids[i: i + 100],
+            documents=documents[i: i + 100],
+            metadatas=metadatas[i: i + 100],  # type: ignore
         )
 
     new_count = collection.count()

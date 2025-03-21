@@ -1,14 +1,11 @@
 import argparse
 from typing import List
-import os
 
 import google.generativeai as genai
 import chromadb
 from chromadb.utils import embedding_functions
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+from Env import Env
 
 model = genai.GenerativeModel("gemini-2.0-flash")
 
@@ -31,14 +28,13 @@ def build_prompt(query: str, context: List[str]) -> str:
 
     base_prompt = {
         "content": "I am going to ask you a question, which I would like you to answer"
-        " based only on the provided context, and not any other information."
-        " If there is not enough information in the context to answer the question,"
-        ' say "I am not sure", then try to make a guess.'
-        " Break your answer up into nicely readable paragraphs.",
+                   " Break your answer up into nicely readable paragraphs."
+                   " If question is not related to the context, don't talk context."
     }
+
     user_prompt = {
         "content": f" The question is '{query}'. Here is all the context you have:"
-        f'{(" ").join(context)}',
+                   f'{(" ").join(context)}',
     }
 
     # combine the prompts to output a single prompt string
@@ -47,7 +43,7 @@ def build_prompt(query: str, context: List[str]) -> str:
     return system
 
 
-def get_gemini_response(query: str, context: List[str]) -> str:
+def get_gemini_response(query: str, context: List[str]) -> None:
     """
     Queries the Gemini API to get a response to the question.
 
@@ -59,22 +55,17 @@ def get_gemini_response(query: str, context: List[str]) -> str:
     A response to the question.
     """
 
-    response = model.generate_content(build_prompt(query, context))
+    response = model.generate_content(build_prompt(query, context), stream=True)
 
-    return response.text
+    for chunk in response:
+        print(chunk.text, sep="", end="", flush=True)
 
 
 def main(
-    collection_name: str = "documents_collection", persist_directory: str = "."
+        collection_name: str = "documents_collection", persist_directory: str = "."
 ) -> None:
     # Check if the GOOGLE_API_KEY environment variable is set. Prompt the user to set it if not.
-    google_api_key = None
-    if "GEMINI_API_KEY" not in os.environ:
-        gapikey = input("Please enter your Google API Key: ")
-        genai.configure(api_key=gapikey)
-        google_api_key = gapikey
-    else:
-        google_api_key = os.environ["GEMINI_API_KEY"]
+    google_api_key = Env("GEMINI_API_KEY")
 
     # Instantiate a persistent chroma client in the persist_directory.
     # This will automatically load any previously saved collections.
@@ -113,10 +104,9 @@ def main(
         )
 
         # Get the response from Gemini
-        response = get_gemini_response(query, results["documents"][0])  # type: ignore
+        get_gemini_response(query, results["documents"][0])  # type: ignore
 
         # Output, with sources
-        print(response)
         print("\n")
         print(f"Source documents:\n{sources}")
         print("\n")
