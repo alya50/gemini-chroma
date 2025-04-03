@@ -1,21 +1,25 @@
 # Chat with your documents
 
-This project contains a (very) minimal, self-contained example of how to add your custom documents to gemini to extend its knowledge base, using Chroma and Google Gemini's API.
+This project contains a (very) minimal, self-contained example of how to add your custom documents to gemini to extend
+its knowledge base, using Chroma and Google Gemini's API.
 It uses fictional hybird car article as example document.
 
 ## How it works
 
 The basic flow is as follows:
 
-0. The text documents in the `documents` folder are loaded line by line, then embedded and stored in a Chroma collection.
+0. The text documents in the `documents` folder are loaded line by line, then embedded and stored in a Chroma
+   collection.
 
-1. When the user submits a question, it gets embedded using the same model as the documents, and the lines most relevant to the query are retrieved by Chroma.
-2. The user-submitted question is passed to Google Gemini's API, along with the extra context retrieved by Chroma. The Google Gemini API generates a response.
+1. When the user submits a question, it gets embedded using the same model as the documents, and the lines most relevant
+   to the query are retrieved by Chroma.
+2. The user-submitted question is passed to Google Gemini's API, along with the extra context retrieved by Chroma. The
+   Google Gemini API generates a response.
 3. The response is displayed to the user, along with the lines used as extra context.
 
 ## Running the example
 
-You will need an Gemini API key to run this demo.
+You will need a Gemini API key to run this demo.
 
 Install dependencies and run the example:
 
@@ -51,4 +55,5 @@ StarlightQueen.md: line 31
 StarlightQueen.md: line 5
 ```
 
-You can replace the example text documents in the `documents` folder with your own documents, and the chatbot will use those instead.
+You can replace the example text documents in the `documents` folder with your own documents, and the chatbot will use
+those instead.

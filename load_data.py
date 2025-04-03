@@ -3,10 +3,9 @@ import argparse
 
 from chromadb import Settings
 from tqdm import tqdm
-
 import chromadb
 from chromadb.utils import embedding_functions
-
+import pypdf
 from Env import Env
 
 
@@ -22,18 +21,39 @@ def main(
 
     files = os.listdir(documents_directory)
 
+    def add_line(line: str, filename: str, line_number: int):
+        # Strip whitespace and append the line to the documents list
+        line = line.strip()
+        # Skip empty lines
+        if len(line) == 0:
+            return
+        documents.append(line)
+        metadatas.append({"filename": filename, "line_number": line_number})
+
     for filename in files:
-        with open(f"{documents_directory}/{filename}", "r") as file:
-            for line_number, line in enumerate(
-                    tqdm((file.readlines()), desc=f"Reading {filename}"), 1
-            ):
-                # Strip whitespace and append the line to the documents list
-                line = line.strip()
-                # Skip empty lines
-                if len(line) == 0:
-                    continue
-                documents.append(line)
-                metadatas.append({"filename": filename, "line_number": line_number})
+        if filename.endswith(".pdf"):
+            pdf = pypdf.PdfReader(f"{documents_directory}/{filename}")
+            pages: int = 0
+            for page in pdf.pages:
+                pages += 1
+                print(f"Page {pages}")
+                text = page.extract_text()
+                # Split by double newlines to separate paragraphs
+                paragraphs = text.split('\n\n')
+                print(len(paragraphs))
+                # Remove empty paragraphs and clean up extra whitespace
+                paragraphs = [p.strip() for p in paragraphs if p.strip()]
+                for (line_number, paragraph) in enumerate(paragraphs):
+                    print("paragraph ================")
+                    print(paragraph)
+                    print("paragraph ================")
+                    add_line(line=paragraph, filename=filename, line_number=line_number)
+        else:
+            with open(f"{documents_directory}/{filename}", "r") as file:
+                for line_number, line in enumerate(file.readlines()):
+                    add_line(line=line, filename=filename, line_number=line_number)
+
+    print(documents)
 
     # Instantiate a persistent chroma client in the persist_directory.
     # Learn more at docs.trychroma.com

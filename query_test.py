@@ -28,4 +28,7 @@ results = collection.query(
     include=["documents", "metadatas"]
 )
 
-print(json.dumps(results, indent=40, default=str))
+print("DOCUMENTS: =========================")
+print(results["documents"])
+print("ALL DATA: =========================")
+print(json.dumps(results, indent=2, default=str))

@@ -91,9 +91,9 @@ def main(
             continue
         print("\nThinking...\n")
 
-        # Query the collection to get the 5 most relevant results
+        # Query the collection to get the 10 most relevant results
         results = collection.query(
-            query_texts=[query], n_results=5, include=["documents", "metadatas"]
+            query_texts=[query], n_results=10, include=["documents", "metadatas"]
         )
 
         sources = "\n".join(
